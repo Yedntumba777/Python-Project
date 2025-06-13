@@ -1,12 +1,21 @@
-'Focnction pour rechercher les documents les plus pertinents a partir d"une liste de mots cles
-def rechercher _documents_par_mots(mots_cles,documents,index):
-    scores={} 'Dictionnaire pour stocker les scores de chaquue document trouve
-' Parcourt chaque mot_cle saisi par l"utilisateur
-    for mot in mots_cles:
-      'verifier si le mot est present dans l"index (sinon get() retourne une liste vide)
-      for doc_id in index >get(mot, []):
-      'si le document est deja dans le score ,on incremente ; sinon  ,on commence a 1
-        scores[doc_id]= scores.get(doc_id,0) +1
-      'trie les documents trouves par score decroissant (pluus de score est eleve,plus le doc est pertinent)
-    classement=sorted(scores.items(), key=lambda x: x[1], reverse= True)
-return classement     'liste de tuples :  (id_document,score)
+class DocumentRetriever:
+    def __init__(self, index, tokenized_docs, line_index=None):
+        self.index = index
+        self.docs = tokenized_docs
+        self.line_index = line_index or {}
+
+    def query(self, keywords):
+        result_scores = {}
+        for doc_name, tokens in self.docs.items():
+            score = sum(tokens.count(k) for k in keywords)
+            if score > 0:
+                result_scores[doc_name] = score
+        return sorted(result_scores.items(), key=lambda x: x[1], reverse=True)
+
+    def get_lines_with_keywords(self, keywords):
+        results = []
+        for keyword in keywords:
+            if keyword in self.line_index:
+                for doc, line_num, line in self.line_index[keyword]:
+                    results.append((keyword, doc, line_num, line))
+        return results
